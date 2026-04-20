@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOCFL 互動學習系統</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>華語詞彙挑戰站</h1>
+            <div id="status">積分：<span id="score">0</span></div>
+        </header>
+
+        <main id="game-container">
+            <div id="question-card" class="card">
+                <div id="media-area">
+                    <img id="q-image" src="https://via.placeholder.com/150" alt="詞彙圖片">
+                </div>
+                <h2 id="q-text">載入中...</h2>
+                <div id="options">
+                    </div>
+            </div>
+        </main>
+
+        <footer id="feedback-area">
+            <p id="msg"></p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
