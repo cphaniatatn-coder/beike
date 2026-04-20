@@ -3,27 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Mandarin Reader</title>
+    <title>Smart Mandarin Reader - TOCFL Pro</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; padding: 20px; background: #f4f7f6; }
+        /* --- CSS: Tampilan Antarmuka --- */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; padding: 20px; background: #f4f7f6; color: #333; }
         .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; text-align: center; }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 20px; }
         
-        /* Area Input */
-        #input-area { width: 100%; height: 150px; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 10px; resize: vertical; }
-        button { background: #3498db; color: white; border: none; padding: 10px 25px; border-radius: 5px; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        button:hover { background: #2980b9; }
+        #input-area { width: 100%; height: 120px; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 10px; resize: none; box-sizing: border-box; }
+        .btn-primary { background: #3498db; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-size: 16px; width: 100%; transition: 0.3s; }
+        .btn-primary:hover { background: #2980b9; }
 
-        /* Area Membaca */
-        #reader-display { margin-top: 30px; padding: 20px; border-top: 2px solid #eee; font-size: 24px; line-height: 2; }
+        /* --- CSS: Area Bacaan --- */
+        #reader-display { margin-top: 30px; padding: 20px; border-top: 2px solid #eee; font-size: 28px; line-height: 2.2; min-height: 200px; }
         
-        /* Styling Kata yang bisa diklik */
-        .word { cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: background 0.2s; position: relative; }
+        .word { cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: 0.2s; position: relative; display: inline-block; }
         .word:hover { background: #ffeaa7; color: #d35400; }
         
-        /* Warna berdasarkan Level (Contoh) */
-        .level-a1 { border-bottom: 2px solid #2ecc71; }
-        .level-a2 { border-bottom: 2px solid #3498db; }
+        /* Indikator Level TOCFL */
+        .level-a1 { border-bottom: 3px solid #2ecc71; } /* Hijau */
+        .level-a2 { border-bottom: 3px solid #3498db; } /* Biru */
+
+        /* --- CSS: Pop-up Kamus --- */
+        #dict-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            z-index: 1000;
+            width: 280px;
+            text-align: center;
+        }
+        #dict-popup h3 { margin: 0; font-size: 32px; color: #2c3e50; }
+        .pinyin { color: #7f8c8d; font-style: italic; font-size: 18px; margin: 5px 0; }
+        .definition { font-size: 16px; margin: 15px 0; color: #555; }
+        .level-tag { display: inline-block; background: #e67e22; color: white; padding: 3px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 999; }
     </style>
 </head>
 <body>
@@ -31,65 +51,94 @@
 <div class="container">
     <h1>Smart Mandarin Reader</h1>
     
-    <textarea id="input-area" placeholder="Tempel teks Mandarin di sini..."></textarea>
-    <br>
-    <button onclick="processText()">Mulai Membaca</button>
+    <textarea id="input-area" placeholder="Masukkan teks Mandarin di sini... (Contoh: 老師你好，我是學生)"></textarea>
+    <button class="btn-primary" onclick="processText()">Mulai Analisis Teks</button>
 
     <div id="reader-display">
-        </div>
+        <p style="font-size: 16px; color: #999;">Hasil analisis akan muncul di sini...</p>
+    </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closePopup()"></div>
+<div id="dict-popup">
+    <div class="level-tag" id="pop-level">TOCFL A1</div>
+    <h3 id="pop-word">汉字</h3>
+    <p class="pinyin" id="pop-pinyin">pinyin</p>
+    <div class="definition" id="pop-def">Definisi kata akan muncul di sini.</div>
+    <button onclick="closePopup()" style="background:#eee; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Tutup</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jieba-js@1.0.2/dist/jieba.js"></script>
 
 <script>
-    // Inisialisasi Kamus Sederhana (Nanti bisa kita hubungkan ke database Excel/JSON kamu)
+    /* 1. Database Kamus (Nanti ini dipindah ke file JSON eksternal) */
     const simpleDict = {
         "老師": { pinyin: "lǎoshī", definition: "Guru / Teacher", level: "A1" },
         "學生": { pinyin: "xuésheng", definition: "Siswa / Student", level: "A1" },
         "學習": { pinyin: "xuéxí", definition: "Belajar / To study", level: "A2" },
-        "你好": { pinyin: "nǐhǎo", definition: "Halo / Hello", level: "A1" }
+        "你好": { pinyin: "nǐhǎo", definition: "Halo / Hello", level: "A1" },
+        "我是": { pinyin: "wǒ shì", definition: "Saya adalah", level: "A1" }
     };
 
-    // Fungsi utama untuk memproses teks
-    async function processText() {
+    /* 2. Fungsi Memproses Teks */
+    function processText() {
         const text = document.getElementById('input-area').value;
         const display = document.getElementById('reader-display');
         
-        if (!text) return;
-        display.innerHTML = "Memproses teks...";
+        if (!text.trim()) {
+            alert("Harap masukkan teks terlebih dahulu.");
+            return;
+        }
 
-        // Menggunakan Jieba untuk memotong kata
-        // Di lingkungan web, kita menggunakan fungsi cut
+        display.innerHTML = "Memproses...";
+
+        // Menggunakan Jieba untuk memotong kata secara otomatis
         const words = nodeJieba.cut(text); 
-
-        display.innerHTML = ""; // Bersihkan tampilan
+        display.innerHTML = ""; 
 
         words.forEach(word => {
             const span = document.createElement('span');
             span.className = 'word';
-            
-            // Cek apakah kata ada di kamus kita
+            span.innerText = word;
+
+            // Jika kata ada di kamus, beri tanda level
             if (simpleDict[word]) {
-                span.classList.add('level-' + simpleDict[word].level.toLowerCase());
-                span.title = simpleDict[word].pinyin; // Muncul saat mouse di atas kata
+                const levelClass = 'level-' + simpleDict[word].level.toLowerCase();
+                span.classList.add(levelClass);
             }
 
-            span.innerText = word;
-            
-            // Fungsi saat diklik
+            // Event Klik
             span.onclick = () => showDetail(word);
-            
             display.appendChild(span);
         });
     }
 
+    /* 3. Fungsi Pop-up Detail */
     function showDetail(word) {
         const data = simpleDict[word];
+        const popup = document.getElementById('dict-popup');
+        const overlay = document.getElementById('overlay');
+
         if (data) {
-            alert(`Kata: ${word}\nPinyin: ${data.pinyin}\nArti: ${data.definition}\nLevel: ${data.level}`);
+            document.getElementById('pop-word').innerText = word;
+            document.getElementById('pop-pinyin').innerText = data.pinyin;
+            document.getElementById('pop-def').innerText = data.definition;
+            document.getElementById('pop-level').innerText = "TOCFL " + data.level;
+            document.getElementById('pop-level').style.display = "inline-block";
         } else {
-            alert(`Kata: ${word}\n(Belum ada di kamus)`);
+            document.getElementById('pop-word').innerText = word;
+            document.getElementById('pop-pinyin').innerText = "-";
+            document.getElementById('pop-def').innerText = "Kata ini belum ada di database kamus.";
+            document.getElementById('pop-level').style.display = "none";
         }
+
+        popup.style.display = 'block';
+        overlay.style.display = 'block';
+    }
+
+    function closePopup() {
+        document.getElementById('dict-popup').style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
     }
 </script>
 
