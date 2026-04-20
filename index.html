@@ -39,25 +39,57 @@
         </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/jieba-js@1.0.2/dist/jieba.js"></script>
+
 <script>
-    function processText() {
+    // Inisialisasi Kamus Sederhana (Nanti bisa kita hubungkan ke database Excel/JSON kamu)
+    const simpleDict = {
+        "老師": { pinyin: "lǎoshī", definition: "Guru / Teacher", level: "A1" },
+        "學生": { pinyin: "xuésheng", definition: "Siswa / Student", level: "A1" },
+        "學習": { pinyin: "xuéxí", definition: "Belajar / To study", level: "A2" },
+        "你好": { pinyin: "nǐhǎo", definition: "Halo / Hello", level: "A1" }
+    };
+
+    // Fungsi utama untuk memproses teks
+    async function processText() {
         const text = document.getElementById('input-area').value;
         const display = document.getElementById('reader-display');
         
         if (!text) return;
+        display.innerHTML = "Memproses teks...";
 
-        // Sementara: Kita pecah per karakter 
-        // (Langkah berikutnya kita akan pakai library pemotong kata)
-        display.innerHTML = "";
-        const chars = text.split("");
-        
-        chars.forEach(char => {
+        // Menggunakan Jieba untuk memotong kata
+        // Di lingkungan web, kita menggunakan fungsi cut
+        const words = nodeJieba.cut(text); 
+
+        display.innerHTML = ""; // Bersihkan tampilan
+
+        words.forEach(word => {
             const span = document.createElement('span');
             span.className = 'word';
-            span.innerText = char;
-            span.onclick = () => alert("Informasi untuk: " + char);
+            
+            // Cek apakah kata ada di kamus kita
+            if (simpleDict[word]) {
+                span.classList.add('level-' + simpleDict[word].level.toLowerCase());
+                span.title = simpleDict[word].pinyin; // Muncul saat mouse di atas kata
+            }
+
+            span.innerText = word;
+            
+            // Fungsi saat diklik
+            span.onclick = () => showDetail(word);
+            
             display.appendChild(span);
         });
+    }
+
+    function showDetail(word) {
+        const data = simpleDict[word];
+        if (data) {
+            alert(`Kata: ${word}\nPinyin: ${data.pinyin}\nArti: ${data.definition}\nLevel: ${data.level}`);
+        } else {
+            alert(`Kata: ${word}\n(Belum ada di kamus)`);
+        }
     }
 </script>
 
