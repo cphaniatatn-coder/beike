@@ -3,31 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOCFL 互動學習系統</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Smart Mandarin Reader</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; padding: 20px; background: #f4f7f6; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; }
+        
+        /* Area Input */
+        #input-area { width: 100%; height: 150px; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 10px; resize: vertical; }
+        button { background: #3498db; color: white; border: none; padding: 10px 25px; border-radius: 5px; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        button:hover { background: #2980b9; }
+
+        /* Area Membaca */
+        #reader-display { margin-top: 30px; padding: 20px; border-top: 2px solid #eee; font-size: 24px; line-height: 2; }
+        
+        /* Styling Kata yang bisa diklik */
+        .word { cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: background 0.2s; position: relative; }
+        .word:hover { background: #ffeaa7; color: #d35400; }
+        
+        /* Warna berdasarkan Level (Contoh) */
+        .level-a1 { border-bottom: 2px solid #2ecc71; }
+        .level-a2 { border-bottom: 2px solid #3498db; }
+    </style>
 </head>
 <body>
-    <div id="app">
-        <header>
-            <h1>華語詞彙挑戰站</h1>
-            <div id="status">積分：<span id="score">0</span></div>
-        </header>
 
-        <main id="game-container">
-            <div id="question-card" class="card">
-                <div id="media-area">
-                    <img id="q-image" src="https://via.placeholder.com/150" alt="詞彙圖片">
-                </div>
-                <h2 id="q-text">載入中...</h2>
-                <div id="options">
-                    </div>
-            </div>
-        </main>
+<div class="container">
+    <h1>Smart Mandarin Reader</h1>
+    
+    <textarea id="input-area" placeholder="Tempel teks Mandarin di sini..."></textarea>
+    <br>
+    <button onclick="processText()">Mulai Membaca</button>
 
-        <footer id="feedback-area">
-            <p id="msg"></p>
-        </footer>
-    </div>
-    <script src="script.js"></script>
+    <div id="reader-display">
+        </div>
+</div>
+
+<script>
+    function processText() {
+        const text = document.getElementById('input-area').value;
+        const display = document.getElementById('reader-display');
+        
+        if (!text) return;
+
+        // Sementara: Kita pecah per karakter 
+        // (Langkah berikutnya kita akan pakai library pemotong kata)
+        display.innerHTML = "";
+        const chars = text.split("");
+        
+        chars.forEach(char => {
+            const span = document.createElement('span');
+            span.className = 'word';
+            span.innerText = char;
+            span.onclick = () => alert("Informasi untuk: " + char);
+            display.appendChild(span);
+        });
+    }
+</script>
+
 </body>
 </html>
