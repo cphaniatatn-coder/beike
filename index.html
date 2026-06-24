@@ -1,757 +1,504 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HanyuReader — Belajar Mandarin dengan AI</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>生詞刮刮樂</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&family=Space+Mono:wght@400;700&display=swap');
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --jade:#1D9E75;--jade-light:#E1F5EE;--jade-dark:#0F6E56;
-  --ink:#2C2C2A;--ink-soft:#444441;--ink-muted:#888780;
-  --paper:#FAFAF8;--paper-alt:#F1EFE8;--paper-card:#FFFFFF;
-  --red:#D85A30;--amber:#BA7517;--blue:#185FA5;
-  --border:rgba(0,0,0,0.10);--border-soft:rgba(0,0,0,0.06);
-  --r:12px;--rs:8px;
-  --fn:'Noto Sans SC',sans-serif;
-  --fs:'Noto Serif SC',serif;
-  --fm:'Space Mono',monospace;
-}
-body{font-family:var(--fn);background:var(--paper);color:var(--ink);min-height:100vh;display:flex;flex-direction:column;}
+  :root{
+    --ink:#2b2b33;
+    --gold:#e8b13a;
+    --gold-dark:#c4901f;
+    --red:#e2574c;
+    --teal:#1f9d8c;
+    --teal-dark:#136f63;
+    --paper:#ffffff;
+    --line:#eceae5;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0;
+    background:var(--paper);
+    font-family:'Noto Sans TC', "PingFang TC","Microsoft JhengHei",sans-serif;
+    color:var(--ink);
+    overscroll-behavior:none;
+  }
+  .app{
+    max-width:920px;
+    margin:0 auto;
+    padding:22px 16px 40px;
+  }
+  header{ text-align:center; margin-bottom:14px; }
+  .ticket-badge{
+    display:inline-block;
+    font-size:12px;
+    letter-spacing:.18em;
+    font-weight:700;
+    color:var(--gold-dark);
+    border:1.5px dashed var(--gold);
+    border-radius:999px;
+    padding:4px 14px;
+    margin-bottom:10px;
+  }
+  h1{
+    font-size:clamp(26px,5vw,34px);
+    font-weight:900;
+    margin:0 0 6px;
+    letter-spacing:.04em;
+  }
+  h1 .em{ color:var(--gold-dark); }
+  .hint{
+    margin:0;
+    color:#8a8a92;
+    font-size:14px;
+  }
+  .toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin:18px 0 16px;
+    padding:10px 16px;
+    background:#fafaf8;
+    border:1px solid var(--line);
+    border-radius:14px;
+    flex-wrap:wrap;
+  }
+  .counter{
+    font-size:14px;
+    font-weight:700;
+    color:#5b5b63;
+  }
+  .counter span{
+    color:var(--red);
+    font-size:16px;
+  }
+  .btn-group{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    appearance:none;
+    border:none;
+    cursor:pointer;
+    font-family:inherit;
+    font-weight:700;
+    font-size:13.5px;
+    color:#fff;
+    padding:10px 16px;
+    border-radius:999px;
+    transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    letter-spacing:.02em;
+    white-space:nowrap;
+  }
+  .btn:hover{ transform:translateY(-1px); }
+  .btn:active{ transform:translateY(0); }
+  .btn:disabled{ opacity:.5; cursor:default; transform:none; }
+  .reset-btn{
+    background:linear-gradient(135deg,#f2c14e,#e2574c);
+    box-shadow:0 4px 14px rgba(226,87,76,.28);
+  }
+  .reset-btn:hover{ box-shadow:0 6px 16px rgba(226,87,76,.34); }
+  .reveal-btn{
+    background:linear-gradient(135deg,#3fc1ac,#136f63);
+    box-shadow:0 4px 14px rgba(31,157,140,.28);
+  }
+  .reveal-btn:hover{ box-shadow:0 6px 16px rgba(31,157,140,.34); }
 
-/* HEADER */
-.hdr{background:var(--paper-card);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:56px;position:sticky;top:0;z-index:100;gap:16px;}
-.logo{font-family:var(--fs);font-size:19px;font-weight:700;color:var(--jade-dark);display:flex;align-items:center;gap:8px;margin-right:auto;text-decoration:none;}
-.logo-box{width:32px;height:32px;background:var(--jade);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;font-weight:700;}
-.nav-tabs{display:flex;gap:3px;background:var(--paper-alt);padding:4px;border-radius:10px;}
-.ntab{padding:6px 15px;border-radius:7px;border:none;background:transparent;font-family:var(--fn);font-size:13px;font-weight:500;color:var(--ink-muted);cursor:pointer;transition:all .15s;}
-.ntab.active{background:white;color:var(--jade-dark);box-shadow:0 1px 3px rgba(0,0,0,.08);}
-.btn-p{background:var(--jade);color:white;border:none;padding:8px 18px;border-radius:var(--rs);font-family:var(--fn);font-size:13px;font-weight:500;cursor:pointer;transition:background .15s;}
-.btn-p:hover{background:var(--jade-dark);}
+  .stage{ position:relative; }
 
-/* VIEWS */
-.view{display:none;}
-.view.active{display:block;}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(132px,1fr));
+    gap:12px;
+  }
 
-/* READER VIEW */
-.reader-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;padding:24px;max-width:1200px;margin:0 auto;}
-.reader-col{display:flex;flex-direction:column;gap:16px;}
+  .card{
+    position:relative;
+    aspect-ratio:4/3.2;
+    border-radius:16px;
+    overflow:hidden;
+    background:#fff;
+    border:1px solid var(--line);
+    box-shadow:0 2px 6px rgba(0,0,0,.04);
+    transform:scale(1);
+    transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .card.shuffling{ transition:transform .5s cubic-bezier(.34,1.56,.64,1); }
+  .card.revealed{ animation:pop .4s ease; }
+  @keyframes pop{
+    0%{ transform:scale(1); }
+    45%{ transform:scale(1.08); }
+    100%{ transform:scale(1); }
+  }
 
-/* TOOLBAR */
-.toolbar{background:var(--paper-card);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-.tlabel{font-size:11px;color:var(--ink-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
-.mode-g{display:flex;gap:3px;background:var(--paper-alt);padding:3px;border-radius:8px;}
-.mbtн{padding:5px 12px;border:none;background:transparent;border-radius:5px;font-family:var(--fn);font-size:12px;font-weight:500;color:var(--ink-muted);cursor:pointer;transition:all .15s;}
-.mbtn.active{background:white;color:var(--jade-dark);}
-.lvl-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:var(--fm);}
-.l1{background:#E1F5EE;color:#0F6E56}.l2{background:#EAF3DE;color:#3B6D11}.l3{background:#FAEEDA;color:#854F0B}.l4{background:#FAECE7;color:#993C1D}
-.audio-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid var(--border);border-radius:20px;background:white;color:var(--ink-soft);font-family:var(--fn);font-size:12px;cursor:pointer;transition:all .15s;margin-left:auto;}
-.audio-btn:hover{border-color:var(--jade);color:var(--jade);}
+  .content{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    gap:4px;
+    text-align:center;
+    padding:6px;
+  }
+  .content .emoji{ font-size:clamp(26px,6vw,34px); line-height:1; }
+  .content .hanzi{
+    font-size:clamp(18px,4.4vw,24px);
+    font-weight:900;
+    letter-spacing:.02em;
+  }
 
-/* ARTICLE */
-.article-card{background:var(--paper-card);border:1px solid var(--border);border-radius:var(--r);padding:28px 32px;font-family:var(--fs);}
-.art-title{font-size:26px;font-weight:700;margin-bottom:8px;color:var(--ink);}
-.art-meta{display:flex;gap:10px;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-soft);flex-wrap:wrap;}
-.chip{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid;}
-.cg{background:#E1F5EE;color:#0F6E56;border-color:rgba(29,158,117,.25);}
-.ca{background:#FAEEDA;color:#854F0B;border-color:rgba(186,117,23,.25);}
-.cr{background:#FAECE7;color:#993C1D;border-color:rgba(216,90,48,.25);}
-.cb{background:#E6F1FB;color:#185FA5;border-color:rgba(24,95,165,.25);}
+  .card canvas{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    display:block;
+    cursor:pointer;
+    touch-action:none;
+    user-select:none;
+    transition:opacity .35s ease;
+  }
+  .card canvas.fading{ opacity:0; }
 
-/* WORD RUBY */
-.text-para{margin-bottom:8px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:2px;line-height:3.2;}
-.wr{display:inline-flex;flex-direction:column;align-items:center;position:relative;cursor:pointer;padding:0 3px;border-radius:4px;transition:all .15s;vertical-align:bottom;line-height:1;margin:0 1px;}
-.wr:hover{background:var(--jade-light);}
-.wr.hl{background:#FAEEDA;}
-.wr.nw{border-bottom:2px solid var(--jade);}
-.wr.sv{background:#E1F5EE;}
-.py{font-size:11px;color:var(--jade);font-family:var(--fm);line-height:1;margin-bottom:2px;white-space:nowrap;}
-.hz{font-size:22px;color:var(--ink);line-height:1;}
-.punct{font-size:22px;color:var(--ink-soft);display:inline-flex;align-items:flex-end;padding-bottom:2px;}
+  .sparkle{
+    position:absolute;
+    font-size:18px;
+    pointer-events:none;
+    animation:sparkle .6s ease forwards;
+  }
+  @keyframes sparkle{
+    0%{ opacity:1; transform:translateY(0) scale(.6); }
+    100%{ opacity:0; transform:translateY(-22px) scale(1.3); }
+  }
 
-.show-py .py{display:block;}
-.hide-py .py{display:none;}
-.hover-py .py{display:none;}
-.hover-py .wr:hover .py{display:block;}
+  .shuffle-overlay{
+    position:absolute; inset:0;
+    background:rgba(255,255,255,.92);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:10px;
+    border-radius:18px;
+    z-index:5;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease;
+  }
+  .shuffle-overlay.show{ opacity:1; pointer-events:all; }
+  .shuffle-spinner{
+    width:38px; height:38px;
+    border-radius:50%;
+    border:4px solid var(--line);
+    border-top-color:var(--gold);
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .shuffle-overlay p{
+    margin:0; font-weight:700; color:#8a8a92; font-size:14px; letter-spacing:.1em;
+  }
 
-/* SIDEBAR */
-.sidebar{display:flex;flex-direction:column;gap:16px;position:sticky;top:76px;align-self:flex-start;}
-.panel{background:var(--paper-card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
-.ph{padding:12px 16px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;}
-.ptitle{font-size:13px;font-weight:500;color:var(--ink-soft);display:flex;align-items:center;gap:6px;}
-.ptitle i{color:var(--jade);font-size:15px;}
-.sw-group{display:flex;gap:3px;}
-.sw-btn{padding:4px 10px;border:none;border-radius:6px;background:transparent;font-size:12px;color:var(--ink-muted);cursor:pointer;transition:all .15s;font-family:var(--fn);}
-.sw-btn.active{background:var(--jade-light);color:var(--jade-dark);font-weight:500;}
+  footer{
+    text-align:center;
+    margin-top:22px;
+    font-size:12px;
+    color:#b7b7bd;
+  }
 
-/* DICT */
-.dict-ph{padding:32px 16px;text-align:center;color:var(--ink-muted);font-size:13px;}
-.dict-ph .bigc{font-size:52px;color:var(--paper-alt);margin-bottom:12px;font-family:var(--fs);display:block;}
-.dict-body{padding:16px;display:none;}
-.side-sec{display:none;} .side-sec.active{display:block;}
-.dc-row{display:flex;gap:14px;align-items:center;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border-soft);}
-.dc-char{font-size:60px;font-family:var(--fs);color:var(--ink);line-height:1;width:76px;height:76px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:var(--rs);background:var(--paper);}
-.dc-py{font-size:17px;color:var(--jade);font-family:var(--fm);font-weight:700;margin-bottom:3px;}
-.dc-type{font-size:11px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
-.dc-en{font-size:14px;color:var(--ink);font-weight:500;}
-.dc-id{font-size:13px;color:var(--ink-soft);}
-.sec-title{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-muted);font-weight:600;margin-bottom:8px;margin-top:10px;}
-.rad-grid{display:flex;gap:8px;flex-wrap:wrap;}
-.rad-item{display:flex;flex-direction:column;align-items:center;background:var(--paper-alt);border-radius:8px;padding:8px 12px;gap:3px;}
-.rad-c{font-size:20px;font-family:var(--fs);color:var(--ink);}
-.rad-l{font-size:10px;color:var(--ink-muted);}
-.save-btn{display:flex;align-items:center;gap:6px;width:100%;padding:10px 12px;border:1px solid var(--jade);background:white;border-radius:var(--rs);color:var(--jade-dark);font-family:var(--fn);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;margin-top:12px;}
-.save-btn:hover{background:var(--jade-light);}
-.save-btn.sv{background:var(--jade);color:white;border-color:var(--jade);}
-.ex-item{background:var(--paper-alt);border-radius:var(--rs);padding:10px 12px;margin-bottom:6px;font-size:13px;}
-.ex-cn{color:var(--ink);font-family:var(--fs);margin-bottom:3px;}
-.ex-py{color:var(--jade);font-size:11px;font-family:var(--fm);margin-bottom:2px;}
-.ex-id{color:var(--ink-muted);font-size:12px;}
-.stroke-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
-.stroke-step{width:44px;height:44px;border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-family:var(--fs);color:var(--ink-muted);background:var(--paper);position:relative;cursor:pointer;transition:all .15s;}
-.stroke-step:hover{border-color:var(--jade);color:var(--jade-dark);}
-.snum{position:absolute;top:2px;right:3px;font-size:8px;color:var(--jade);font-family:var(--fm);font-weight:700;}
-
-/* VOCAB LIST */
-.vocab-list{max-height:190px;overflow-y:auto;}
-.vi{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--border-soft);cursor:pointer;transition:background .1s;font-size:13px;}
-.vi:hover{background:var(--paper);}
-.vc{font-size:16px;font-family:var(--fs);min-width:36px;}
-.vp{color:var(--jade);font-family:var(--fm);font-size:11px;flex:1;}
-.ve{color:var(--ink-muted);font-size:12px;}
-.vdot{width:6px;height:6px;border-radius:3px;background:var(--jade);flex-shrink:0;}
-.vdot.new{background:var(--red);}
-.vdot.known{background:var(--ink-muted);}
-
-/* PROGRESS */
-.prog-card{padding:16px;}
-.pstat{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-.plabel{font-size:13px;color:var(--ink-soft);}
-.pval{font-size:15px;font-weight:700;color:var(--jade-dark);font-family:var(--fm);}
-.pbar{height:6px;background:var(--paper-alt);border-radius:3px;overflow:hidden;margin-bottom:14px;}
-.pfill{height:100%;background:var(--jade);border-radius:3px;transition:width .4s ease;}
-
-/* TTS BAR */
-.tts-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--jade-light);border-top:1px solid rgba(29,158,117,.2);}
-.tts-t{font-size:12px;color:var(--jade-dark);flex:1;font-weight:500;}
-.tts-s{font-size:11px;color:var(--jade);font-family:var(--fm);background:rgba(29,158,117,.15);padding:2px 8px;border-radius:20px;}
-
-/* QUIZ OPTS */
-.qopt{display:block;width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--rs);background:white;font-family:var(--fn);font-size:13px;cursor:pointer;transition:all .15s;text-align:left;color:var(--ink-soft);margin-bottom:6px;}
-.qopt:hover{border-color:var(--jade);color:var(--jade-dark);}
-
-/* LIBRARY VIEW */
-.lib-page{padding:24px;max-width:1200px;margin:0 auto;}
-.lib-header{margin-bottom:20px;}
-.lib-header h2{font-size:22px;font-weight:700;font-family:var(--fs);color:var(--ink);margin-bottom:4px;}
-.lib-header p{font-size:14px;color:var(--ink-muted);}
-.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
-.lcard{background:var(--paper-card);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .15s;}
-.lcard:hover{border-color:var(--jade);box-shadow:0 2px 12px rgba(29,158,117,.1);}
-.lcard-title{font-size:16px;font-weight:700;font-family:var(--fs);margin-bottom:6px;color:var(--ink);}
-.lcard-desc{font-size:12px;color:var(--ink-muted);line-height:1.5;margin-bottom:12px;}
-.lcard-foot{display:flex;gap:6px;align-items:center;}
-.lcard-add{background:var(--paper);border:1.5px dashed var(--border);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .15s;}
-.lcard-add:hover{border-color:var(--jade);background:var(--jade-light);}
-.lcard-add i{font-size:28px;color:var(--jade);}
-.lcard-add span{font-size:13px;color:var(--ink-muted);}
-
-/* ANALYZE VIEW */
-.analyze-page{padding:24px;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 320px;gap:20px;}
-.input-area{width:100%;min-height:100px;padding:14px;border:1px solid var(--border);border-radius:var(--rs);font-family:var(--fs);font-size:16px;resize:vertical;background:var(--paper);color:var(--ink);outline:none;transition:border-color .15s;}
-.input-area:focus{border-color:var(--jade);}
-.abtn{display:flex;align-items:center;gap:6px;padding:10px 20px;background:var(--jade);color:white;border:none;border-radius:var(--rs);font-family:var(--fn);font-size:14px;font-weight:500;cursor:pointer;transition:background .15s;}
-.abtn:hover{background:var(--jade-dark);}
-.ldots span{animation:blink 1.2s infinite;opacity:0;}
-.ldots span:nth-child(2){animation-delay:.2s;}
-.ldots span:nth-child(3){animation-delay:.4s;}
-@keyframes blink{0%,100%{opacity:0}50%{opacity:1}}
-
-/* FLASHCARD VIEW */
-.fc-page{padding:24px;max-width:600px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:20px;}
-.fc-info{font-size:13px;color:var(--ink-muted);text-align:center;}
-.fc-wrap{width:100%;perspective:1000px;}
-.fc-inner{width:100%;min-height:260px;position:relative;transform-style:preserve-3d;transition:transform .5s;cursor:pointer;}
-.fc-inner.flipped{transform:rotateY(180deg);}
-.fc-face{position:absolute;width:100%;min-height:260px;backface-visibility:hidden;background:var(--paper-card);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:8px;}
-.fc-face.back{transform:rotateY(180deg);}
-.fc-char{font-size:72px;font-family:var(--fs);color:var(--ink);line-height:1;}
-.fc-py{font-size:18px;color:var(--jade);font-family:var(--fm);font-weight:700;}
-.fc-en{font-size:19px;color:var(--ink-soft);}
-.fc-hint{font-size:12px;color:var(--ink-muted);margin-top:8px;}
-.fc-actions{display:flex;gap:12px;margin-top:4px;}
-.fc-btn{padding:10px 24px;border-radius:var(--rs);border:1px solid;font-family:var(--fn);font-size:13px;cursor:pointer;font-weight:500;transition:all .15s;}
-.fc-easy{background:#E1F5EE;color:#0F6E56;border-color:var(--jade);}
-.fc-hard{background:#FAECE7;color:#993C1D;border-color:var(--red);}
-.fc-again{background:#FAEEDA;color:#854F0B;border-color:var(--amber);}
-.fc-score{display:flex;gap:10px;}
-.fc-sc-item{font-size:12px;padding:4px 14px;border-radius:20px;font-weight:500;}
-.sc-e{background:#E1F5EE;color:#0F6E56;}
-.sc-h{background:#FAECE7;color:#993C1D;}
-
-@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.article-card{animation:fadeInUp .3s ease;}
+  @media (max-width:380px){
+    .grid{ grid-template-columns:repeat(auto-fill,minmax(108px,1fr)); gap:9px; }
+    .toolbar{ flex-direction:column; align-items:stretch; }
+    .btn-group{ justify-content:center; }
+  }
 </style>
 </head>
 <body>
+<div class="app">
+  <header>
+    <span class="ticket-badge">VOCAB SCRATCH CARD</span>
+    <h1>生詞<span class="em">刮刮樂</span> 🎫</h1>
+    <p class="hint">用手指刮一刮（或拍一拍）卡片，看看藏著哪個生詞！</p>
+  </header>
 
-<header class="hdr">
-  <a class="logo" href="#">
-    <div class="logo-box">汉</div>
-    HanyuReader
-  </a>
-  <nav class="nav-tabs">
-    <button class="ntab active" onclick="goView('reader')"><i class="ti ti-book-2"></i> Baca</button>
-    <button class="ntab" onclick="goView('library')"><i class="ti ti-books"></i> Pustaka</button>
-    <button class="ntab" onclick="goView('analyze')"><i class="ti ti-sparkles"></i> Analisis AI</button>
-    <button class="ntab" onclick="goView('flashcard')"><i class="ti ti-cards"></i> Flashcard</button>
-  </nav>
-  <button class="btn-p" onclick="makeQuiz()"><i class="ti ti-clipboard-check"></i> Buat Kuis</button>
-</header>
-
-<!-- READER VIEW -->
-<div id="v-reader" class="view active">
-  <div class="reader-grid">
-    <div class="reader-col">
-      <div class="toolbar">
-        <span class="tlabel">Pinyin</span>
-        <div class="mode-g" id="pin-g">
-          <button class="mbtn active" onclick="setPy('show',this)">Tampil</button>
-          <button class="mbtn" onclick="setPy('hover',this)">Hover</button>
-          <button class="mbtn" onclick="setPy('hide',this)">Sembunyikan</button>
-        </div>
-        <div style="width:1px;height:20px;background:var(--border);margin:0 4px"></div>
-        <span class="tlabel">Aksara</span>
-        <div class="mode-g" id="script-g">
-          <button class="mbtn active" onclick="setScript('simplified',this)">简 Sederhana</button>
-          <button class="mbtn" onclick="setScript('traditional',this)">繁 Tradisional</button>
-        </div>
-        <button class="audio-btn" onclick="speakText()"><i class="ti ti-volume"></i> Dengarkan</button>
-        <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
-          <span class="lvl-badge l2" id="art-level">HSK 2</span>
-          <span style="font-size:12px;color:var(--ink-muted)" id="art-wordcount">86 kata</span>
-        </div>
-      </div>
-
-      <div class="article-card show-py" id="article-body">
-        <div class="art-title" id="art-title">在北京的生活</div>
-        <div class="art-meta">
-          <span class="chip cg" id="art-chip">Pemula</span>
-          <span class="chip ca" id="art-cat">Kehidupan</span>
-          <span style="font-size:12px;color:var(--ink-muted);margin-left:auto">
-            <span style="color:var(--jade)">▬</span> Kata baru &nbsp;&nbsp;
-            <span style="color:#E1F5EE;background:var(--jade);padding:1px 6px;border-radius:3px;font-size:11px">hijau</span> = tersimpan
-          </span>
-        </div>
-        <div id="article-text"></div>
-        <div class="tts-bar">
-          <i class="ti ti-info-circle" style="font-size:15px;color:var(--jade-dark)"></i>
-          <span class="tts-t">Klik kata untuk kamus · Garis bawah hijau = kata baru · Tombol audio untuk dengarkan</span>
-          <span class="tts-s">v1.0</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="sidebar">
-      <!-- DICT PANEL -->
-      <div class="panel">
-        <div class="ph">
-          <div class="ptitle"><i class="ti ti-book-2"></i> Kamus Interaktif</div>
-          <div class="sw-group">
-            <button class="sw-btn active" onclick="showSide('dict',this)">Info</button>
-            <button class="sw-btn" onclick="showSide('stroke',this)">Guratan</button>
-            <button class="sw-btn" onclick="showSide('example',this)">Contoh</button>
-          </div>
-        </div>
-        <div class="dict-ph" id="dph">
-          <span class="bigc">汉</span>
-          <p>Klik kata dalam teks untuk melihat informasi lengkap, urutan guratan, dan contoh kalimat</p>
-        </div>
-        <div class="dict-body" id="dbody">
-          <div class="side-sec active" id="side-dict">
-            <div class="dc-row">
-              <div class="dc-char" id="d-char">好</div>
-              <div>
-                <div class="dc-py" id="d-py">hǎo</div>
-                <div class="dc-type" id="d-type">kata sifat</div>
-                <div class="dc-en" id="d-en">good, well</div>
-                <div class="dc-id" id="d-id">baik, bagus</div>
-              </div>
-            </div>
-            <div class="sec-title">Komponen & Radikal</div>
-            <div class="rad-grid" id="d-radicals">
-              <div class="rad-item"><div class="rad-c">女</div><div class="rad-l">nǚ · wanita</div></div>
-              <div class="rad-item"><div class="rad-c">子</div><div class="rad-l">zǐ · anak</div></div>
-            </div>
-            <div class="sec-title" style="margin-top:14px">Nada & Lafal</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
-              <div style="background:var(--paper-alt);border-radius:6px;padding:6px 12px;font-size:12px;color:var(--ink-soft)">
-                Nada: <strong style="color:var(--jade);font-family:var(--fm)" id="d-tone">3rd tone ↘↗</strong>
-              </div>
-              <button onclick="speakWord()" style="display:flex;align-items:center;gap:4px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:white;font-family:var(--fn);font-size:12px;cursor:pointer;color:var(--ink-soft);">
-                <i class="ti ti-volume"></i> Dengar
-              </button>
-            </div>
-            <button class="save-btn" id="save-btn" onclick="toggleSave()">
-              <i class="ti ti-bookmark"></i> Simpan ke Flashcard
-            </button>
-          </div>
-
-          <div class="side-sec" id="side-stroke">
-            <div class="sec-title">Urutan Penulisan Guratan</div>
-            <div class="stroke-grid" id="stroke-grid"></div>
-            <p style="font-size:12px;color:var(--ink-muted);margin-top:10px;line-height:1.6">Urutan guratan yang benar penting untuk menulis karakter dengan indah dan cepat. Ikuti urutan dari kiri ke kanan, atas ke bawah.</p>
-          </div>
-
-          <div class="side-sec" id="side-example">
-            <div class="sec-title">Contoh Kalimat</div>
-            <div id="example-list"></div>
-            <button class="qopt" style="margin-top:8px" onclick="moreExamples()">
-              <i class="ti ti-refresh"></i> Contoh lainnya →
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- VOCAB LIST -->
-      <div class="panel">
-        <div class="ph">
-          <div class="ptitle"><i class="ti ti-list-check"></i> Kosakata Artikel</div>
-          <span style="font-size:12px;color:var(--jade);font-weight:500" id="new-count">7 kata baru</span>
-        </div>
-        <div class="vocab-list" id="vocab-list"></div>
-      </div>
-
-      <!-- PROGRESS -->
-      <div class="panel">
-        <div class="ph"><div class="ptitle"><i class="ti ti-chart-bar"></i> Progress Membaca</div></div>
-        <div class="prog-card">
-          <div class="pstat"><span class="plabel">Kata diketahui</span><span class="pval">74%</span></div>
-          <div class="pbar"><div class="pfill" style="width:74%"></div></div>
-          <div class="pstat"><span class="plabel">Kata tersimpan</span><span class="pval" id="saved-count">0 / 7</span></div>
-          <div class="pbar"><div class="pfill" id="saved-bar" style="width:0%"></div></div>
-          <button class="qopt" onclick="makeQuiz()">✦ Buat kuis dari artikel ini →</button>
-          <button class="qopt" onclick="makeTranslation()"><i class="ti ti-language"></i> Terjemahkan artikel →</button>
-        </div>
-      </div>
+  <div class="toolbar">
+    <div class="counter">已刮開：<span id="count">0</span> / 13</div>
+    <div class="btn-group">
+      <button id="revealBtn" class="btn reveal-btn">👁️ 顯示生詞</button>
+      <button id="resetBtn" class="btn reset-btn">🔄 重新洗牌</button>
     </div>
   </div>
-</div>
 
-<!-- LIBRARY VIEW -->
-<div id="v-library" class="view">
-  <div class="lib-page">
-    <div class="lib-header">
-      <h2>Pustaka Artikel</h2>
-      <p>Pilih artikel berdasarkan level HSK-mu atau unggah teks sendiri</p>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
-      <button class="chip cb" style="cursor:pointer;padding:6px 14px;font-size:13px" onclick="filterLib('all')">Semua</button>
-      <button class="chip cg" style="cursor:pointer;padding:6px 14px;font-size:13px" onclick="filterLib('hsk1')">HSK 1</button>
-      <button class="chip cg" style="cursor:pointer;padding:6px 14px;font-size:13px" onclick="filterLib('hsk2')">HSK 2</button>
-      <button class="chip ca" style="cursor:pointer;padding:6px 14px;font-size:13px" onclick="filterLib('hsk3')">HSK 3</button>
-      <button class="chip cr" style="cursor:pointer;padding:6px 14px;font-size:13px" onclick="filterLib('hsk4')">HSK 4+</button>
-    </div>
-    <div class="lib-grid" id="lib-grid"></div>
-  </div>
-</div>
-
-<!-- ANALYZE VIEW -->
-<div id="v-analyze" class="view">
-  <div class="analyze-page">
-    <div style="display:flex;flex-direction:column;gap:16px">
-      <div class="panel">
-        <div class="ph"><div class="ptitle"><i class="ti ti-sparkles"></i> Analisis Teks Mandarin</div></div>
-        <div style="padding:16px">
-          <p style="font-size:13px;color:var(--ink-muted);margin-bottom:10px">Tempel teks Mandarin apapun — artikel berita, lirik lagu, dialog — dan AI akan menganalisis level, kosakata, dan membuat materi belajar otomatis.</p>
-          <textarea class="input-area" id="custom-input" placeholder="在这里输入中文文字...&#10;(masukkan teks Mandarin di sini)"></textarea>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
-            <button class="abtn" onclick="analyzeText()"><i class="ti ti-sparkles"></i> Analisis & Buka Reader</button>
-            <select style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--fn);font-size:13px;background:white;color:var(--ink)">
-              <option>Level: Deteksi otomatis</option>
-              <option>HSK 1</option><option>HSK 2</option><option>HSK 3</option><option>HSK 4+</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="panel" id="analyze-result" style="display:none">
-        <div class="ph">
-          <div class="ptitle"><i class="ti ti-file-analytics"></i> Hasil Analisis</div>
-          <button class="btn-p" style="font-size:12px;padding:5px 12px" onclick="goView('reader')">Buka Reader</button>
-        </div>
-        <div id="analyze-content" style="padding:16px;font-size:14px;line-height:1.8;color:var(--ink-soft)"></div>
-      </div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:16px">
-      <div class="panel">
-        <div class="ph"><div class="ptitle"><i class="ti ti-robot"></i> Tanya AI tentang Mandarin</div></div>
-        <div style="padding:12px;display:flex;flex-direction:column;gap:6px">
-          <button class="qopt" onclick="askAI('Jelaskan perbedaan 的 de, 地 de, dan 得 de dalam bahasa Mandarin dengan contoh')">Perbedaan 的 / 地 / 得</button>
-          <button class="qopt" onclick="askAI('Bagaimana cara membedakan dan menggunakan 看 kàn vs 看见 kànjiàn?')">看 vs 看见</button>
-          <button class="qopt" onclick="askAI('Jelaskan cara menggunakan partikel 了 le dalam bahasa Mandarin dengan contoh lengkap')">Fungsi partikel 了 le</button>
-          <button class="qopt" onclick="askAI('Jelaskan sistem 4 nada dalam bahasa Mandarin untuk pemula Indonesia')">Sistem 4 nada Mandarin</button>
-          <button class="qopt" onclick="askAI('Apa perbedaan antara 在 zài, 有 yǒu, dan 是 shì untuk menyatakan keberadaan?')">在 vs 有 vs 是</button>
-          <button class="qopt" onclick="askAI('Bagaimana cara menghitung benda dalam bahasa Mandarin? Jelaskan kata ukur (量词 liàngcí)')">Kata ukur 量词</button>
-        </div>
-      </div>
-      <div class="panel">
-        <div class="ph"><div class="ptitle"><i class="ti ti-bulb"></i> Fitur HanyuReader</div></div>
-        <div style="padding:14px;display:flex;flex-direction:column;gap:12px">
-          <div style="display:flex;gap:10px">
-            <div style="width:26px;height:26px;border-radius:6px;background:var(--jade-light);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-mouse" style="font-size:13px;color:var(--jade)"></i></div>
-            <div><div style="font-size:13px;font-weight:500">Kamus interaktif</div><div style="font-size:12px;color:var(--ink-muted)">Klik kata untuk arti, pinyin, radikal, urutan guratan</div></div>
-          </div>
-          <div style="display:flex;gap:10px">
-            <div style="width:26px;height:26px;border-radius:6px;background:#FAEEDA;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-cards" style="font-size:13px;color:#854F0B"></i></div>
-            <div><div style="font-size:13px;font-weight:500">Flashcard SRS otomatis</div><div style="font-size:12px;color:var(--ink-muted)">Kata tersimpan langsung masuk sistem pengulangan</div></div>
-          </div>
-          <div style="display:flex;gap:10px">
-            <div style="width:26px;height:26px;border-radius:6px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-volume" style="font-size:13px;color:#185FA5"></i></div>
-            <div><div style="font-size:13px;font-weight:500">Pelafalan text-to-speech</div><div style="font-size:12px;color:var(--ink-muted)">Dengarkan bacaan dengan kecepatan normal/lambat</div></div>
-          </div>
-          <div style="display:flex;gap:10px">
-            <div style="width:26px;height:26px;border-radius:6px;background:#EAF3DE;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-writing" style="font-size:13px;color:#3B6D11"></i></div>
-            <div><div style="font-size:13px;font-weight:500">Unggah teks sendiri</div><div style="font-size:12px;color:var(--ink-muted)">Analisis artikel, buku, atau lirik apapun</div></div>
-          </div>
-        </div>
-      </div>
+  <div class="stage">
+    <div class="grid" id="grid"></div>
+    <div class="shuffle-overlay" id="shuffleOverlay">
+      <div class="shuffle-spinner"></div>
+      <p>洗牌中...</p>
     </div>
   </div>
-</div>
 
-<!-- FLASHCARD VIEW -->
-<div id="v-flashcard" class="view">
-  <div class="fc-page">
-    <div class="fc-info">
-      Kartu <strong id="fc-cur">1</strong> dari <strong id="fc-tot">6</strong> &nbsp;·&nbsp;
-      Klik kartu untuk lihat jawaban
-    </div>
-    <div class="fc-wrap">
-      <div class="fc-inner" id="fc-inner" onclick="fcFlip()">
-        <div class="fc-face front">
-          <div class="fc-char" id="fc-char">你好</div>
-          <div class="fc-hint">Klik untuk lihat artinya</div>
-        </div>
-        <div class="fc-face back">
-          <div class="fc-py" id="fc-py">nǐ hǎo</div>
-          <div class="fc-en" id="fc-en">Halo / Hai</div>
-          <div class="fc-hint" id="fc-ctx">Sapaan paling umum dalam Mandarin</div>
-        </div>
-      </div>
-    </div>
-    <div class="fc-actions" id="fc-acts" style="display:none">
-      <button class="fc-btn fc-hard" onclick="fcNext('hard')">✗ Sulit</button>
-      <button class="fc-btn fc-again" onclick="fcNext('again')">↻ Ulangi</button>
-      <button class="fc-btn fc-easy" onclick="fcNext('easy')">✓ Mudah</button>
-    </div>
-    <div class="fc-score">
-      <div class="fc-sc-item sc-e">✓ Mudah: <span id="fc-easy">0</span></div>
-      <div class="fc-sc-item sc-h">✗ Sulit: <span id="fc-hard">0</span></div>
-    </div>
-    <div style="font-size:12px;color:var(--ink-muted);text-align:center;max-width:400px;line-height:1.6">
-      Simpan kata dari reader untuk menambah flashcard ke koleksi ini. Sistem SRS akan mengoptimalkan urutan pengulangan.
-    </div>
-  </div>
+  <footer>共 13 個生詞 · 每次重新洗牌位置都會不一樣</footer>
 </div>
 
 <script>
-// ===== DATA =====
-const ARTICLES_DB = [
-  {
-    id:0, title:"在北京的生活", level:"HSK 2", lvlClass:"l2",
-    chip:"Pemula", cat:"Kehidupan", wordCount:86,
-    paragraphs:[
-      [{c:"我",p:"wǒ",e:"I/saya",i:"saya",t:"known"},{c:"住",p:"zhù",e:"live/reside",i:"tinggal",t:"known"},{c:"在",p:"zài",e:"at/in",i:"di",t:"known"},{c:"北京",p:"Běijīng",e:"Beijing",i:"Beijing",t:"known"},{punct:"。"},{c:"北京",p:"Běijīng",e:"Beijing",i:"Beijing",t:"known"},{c:"是",p:"shì",e:"is/be",i:"adalah",t:"known"},{c:"中国",p:"Zhōngguó",e:"China",i:"Tiongkok",t:"known"},{c:"的",p:"de",e:"(particle)",i:"(partikel)",t:"known"},{c:"首都",p:"shǒudū",e:"capital city",i:"ibu kota",t:"new"},{punct:"。"}],
-      [{c:"这里",p:"zhèlǐ",e:"here",i:"di sini",t:"known"},{c:"有",p:"yǒu",e:"have/there is",i:"ada",t:"known"},{c:"很多",p:"hěnduō",e:"many/a lot",i:"banyak",t:"known"},{c:"有趣",p:"yǒuqù",e:"interesting",i:"menarik",t:"new"},{c:"的",p:"de",e:"(particle)",i:"(partikel)",t:"known"},{c:"地方",p:"dìfāng",e:"place/location",i:"tempat",t:"new"},{punct:"。"},{c:"我",p:"wǒ",e:"I/me",i:"saya",t:"known"},{c:"喜欢",p:"xǐhuān",e:"like/enjoy",i:"suka",t:"known"},{c:"坐",p:"zuò",e:"ride/take",i:"naik",t:"new"},{c:"地铁",p:"dìtiě",e:"subway/metro",i:"MRT/metro",t:"new"},{punct:"。"}],
-      [{c:"每天",p:"měitiān",e:"every day",i:"setiap hari",t:"known"},{c:"早上",p:"zǎoshang",e:"morning",i:"pagi hari",t:"known"},{punct:"，"},{c:"我",p:"wǒ",e:"I/me",i:"saya",t:"known"},{c:"去",p:"qù",e:"go",i:"pergi",t:"known"},{c:"附近",p:"fùjìn",e:"nearby",i:"di sekitar",t:"new"},{c:"的",p:"de",e:"(particle)",i:"(partikel)",t:"known"},{c:"公园",p:"gōngyuán",e:"park",i:"taman",t:"known"},{c:"散步",p:"sànbù",e:"take a walk",i:"jalan-jalan",t:"new"},{punct:"。"}],
-      [{c:"北京",p:"Běijīng",e:"Beijing",i:"Beijing",t:"known"},{c:"的",p:"de",e:"(particle)",i:"(partikel)",t:"known"},{c:"冬天",p:"dōngtiān",e:"winter",i:"musim dingin",t:"known"},{c:"很",p:"hěn",e:"very",i:"sangat",t:"known"},{c:"冷",p:"lěng",e:"cold",i:"dingin",t:"known"},{punct:"，"},{c:"夏天",p:"xiàtiān",e:"summer",i:"musim panas",t:"known"},{c:"很",p:"hěn",e:"very",i:"sangat",t:"known"},{c:"热",p:"rè",e:"hot",i:"panas",t:"known"},{punct:"。"},{c:"我",p:"wǒ",e:"I/me",i:"saya",t:"known"},{c:"最",p:"zuì",e:"most",i:"paling",t:"known"},{c:"喜欢",p:"xǐhuān",e:"like",i:"suka",t:"known"},{c:"秋天",p:"qiūtiān",e:"autumn/fall",i:"musim gugur",t:"new"},{punct:"。"}]
-    ]
-  },
-  {id:1,title:"中国的四季",level:"HSK 1",lvlClass:"l1",chip:"Dasar",cat:"Alam",wordCount:60,paragraphs:[[{c:"中国",p:"Zhōngguó",e:"China",i:"Tiongkok",t:"known"},{c:"有",p:"yǒu",e:"have",i:"memiliki",t:"known"},{c:"四",p:"sì",e:"four",i:"empat",t:"known"},{c:"个",p:"gè",e:"(measure word)",i:"(kata ukur)",t:"known"},{c:"季节",p:"jìjié",e:"season",i:"musim",t:"new"},{punct:"。"}]]},
-  {id:2,title:"美食与文化",level:"HSK 3",lvlClass:"l3",chip:"Menengah",cat:"Budaya",wordCount:120,paragraphs:[[{c:"中国",p:"Zhōngguó",e:"China",i:"Tiongkok",t:"known"},{c:"的",p:"de",e:"(particle)",i:"(partikel)",t:"known"},{c:"饮食",p:"yǐnshí",e:"food/diet",i:"makanan",t:"new"},{c:"文化",p:"wénhuà",e:"culture",i:"budaya",t:"new"},{c:"丰富",p:"fēngfù",e:"rich/abundant",i:"kaya",t:"new"},{punct:"。"}]]},
-  {id:3,title:"科技与未来",level:"HSK 4",lvlClass:"l4",chip:"Lanjutan",cat:"Teknologi",wordCount:150,paragraphs:[[{c:"人工智能",p:"réngōng zhìnéng",e:"artificial intelligence",i:"kecerdasan buatan",t:"new"},{c:"正在",p:"zhèngzài",e:"currently doing",i:"sedang",t:"new"},{c:"改变",p:"gǎibiàn",e:"change/transform",i:"mengubah",t:"new"},{c:"世界",p:"shìjiè",e:"world",i:"dunia",t:"known"},{punct:"。"}]]},
-  {id:4,title:"家庭与传统",level:"HSK 2",lvlClass:"l2",chip:"Pemula",cat:"Keluarga",wordCount:95,paragraphs:[[{c:"中国",p:"Zhōngguó",e:"China",i:"Tiongkok",t:"known"},{c:"的",p:"de",e:"(particle)",i:"(partikel)",t:"known"},{c:"家庭",p:"jiātíng",e:"family",i:"keluarga",t:"new"},{c:"文化",p:"wénhuà",e:"culture",i:"budaya",t:"new"},{c:"非常",p:"fēicháng",e:"very/extremely",i:"sangat",t:"known"},{c:"重要",p:"zhòngyào",e:"important",i:"penting",t:"new"},{punct:"。"}]]}
-];
+(function(){
+  const WORDS = [
+    {hanzi:"還有", emoji:"➕"},
+    {hanzi:"喝",   emoji:"🥤"},
+    {hanzi:"吃",   emoji:"🍴"},
+    {hanzi:"今天", emoji:"📅"},
+    {hanzi:"明天", emoji:"⏭️"},
+    {hanzi:"昨天", emoji:"⏮️"},
+    {hanzi:"來",   emoji:"🚶"},
+    {hanzi:"牛奶", emoji:"🥛"},
+    {hanzi:"水果", emoji:"🍎"},
+    {hanzi:"果汁", emoji:"🧃"},
+    {hanzi:"麵包", emoji:"🍞"},
+    {hanzi:"還要", emoji:"🙋"},
+    {hanzi:"早飯", emoji:"🍳"}
+  ];
 
-const FLASHCARDS_DB = [
-  {c:"你好",p:"nǐ hǎo",e:"Halo / Hai",ctx:"Sapaan paling umum"},
-  {c:"谢谢",p:"xièxiè",e:"Terima kasih",ctx:"Ungkapan rasa terima kasih"},
-  {c:"对不起",p:"duìbuqǐ",e:"Maaf",ctx:"Permohonan maaf formal"},
-  {c:"喜欢",p:"xǐhuān",e:"Suka / Menyukai",ctx:"Menyatakan preferensi"},
-  {c:"地铁",p:"dìtiě",e:"Kereta bawah tanah (MRT)",ctx:"Transportasi umum perkotaan"},
-  {c:"首都",p:"shǒudū",e:"Ibu kota",ctx:"Pusat pemerintahan negara"},
-  {c:"有趣",p:"yǒuqù",e:"Menarik / Seru",ctx:"Mendeskripsikan sesuatu yang menarik"},
-];
+  const PALETTE = [
+    ["#fff7e6","#7a5b14"],
+    ["#fdeceb","#9b3b32"],
+    ["#eaf6ee","#2f6b46"],
+    ["#eef1fb","#3b4a8f"],
+    ["#fdf0f7","#9c3a6c"],
+    ["#eefaf8","#1f7368"],
+    ["#fff3e2","#8a5a18"]
+  ];
 
-const EXAMPLES_DB = {
-  "好":[ {cn:"你好吗？",py:"Nǐ hǎo ma?",id:"Apa kabar?"},{cn:"这里的食物很好吃。",py:"Zhèlǐ de shíwù hěn hǎochī.",id:"Makanan di sini sangat enak."} ],
-  "喜欢":[ {cn:"我喜欢学中文。",py:"Wǒ xǐhuān xué Zhōngwén.",id:"Saya suka belajar bahasa Mandarin."},{cn:"你喜欢什么音乐？",py:"Nǐ xǐhuān shénme yīnyuè?",id:"Kamu suka musik apa?"} ],
-  "首都":[ {cn:"北京是中国的首都。",py:"Běijīng shì Zhōngguó de shǒudū.",id:"Beijing adalah ibu kota Tiongkok."},{cn:"每个国家都有首都。",py:"Měi gè guójiā dōu yǒu shǒudū.",id:"Setiap negara punya ibu kota."} ],
-  "default":[ {cn:"我在学习中文。",py:"Wǒ zài xuéxí Zhōngwén.",id:"Saya sedang belajar bahasa Mandarin."},{cn:"中文很有趣！",py:"Zhōngwén hěn yǒuqù!",id:"Bahasa Mandarin sangat menarik!"} ]
-};
+  const grid = document.getElementById('grid');
+  const countEl = document.getElementById('count');
+  const resetBtn = document.getElementById('resetBtn');
+  const revealBtn = document.getElementById('revealBtn');
+  const overlay = document.getElementById('shuffleOverlay');
 
-// ===== STATE =====
-let curArt = ARTICLES_DB[0];
-let pyMode = 'show';
-let savedWords = new Set();
-let selWord = null;
-let fcIdx = 0, fcFlipped = false, fcEasy = 0, fcHard = 0;
-let fcDeck = [...FLASHCARDS_DB];
+  let revealedCount = 0;
+  const activeIntervals = new Set();
 
-// ===== VIEW =====
-function goView(name) {
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('v-'+name).classList.add('active');
-  const tabs = ['reader','library','analyze','flashcard'];
-  const idx = tabs.indexOf(name);
-  document.querySelectorAll('.ntab')[idx].classList.add('active');
-  if(name==='reader') renderArticle();
-  if(name==='library') renderLibrary();
-}
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
 
-// ===== RENDER ARTICLE =====
-function renderArticle() {
-  const a = curArt;
-  document.getElementById('art-title').textContent = a.title;
-  document.getElementById('art-level').textContent = a.level;
-  document.getElementById('art-level').className = 'lvl-badge '+a.lvlClass;
-  document.getElementById('art-chip').textContent = a.chip;
-  document.getElementById('art-cat').textContent = a.cat;
-  document.getElementById('art-wordcount').textContent = a.wordCount+' kata';
+  function clearAllIntervals(){
+    activeIntervals.forEach(id => clearInterval(id));
+    activeIntervals.clear();
+  }
 
-  const txt = document.getElementById('article-text');
-  txt.innerHTML = a.paragraphs.map(para=>{
-    const words = para.map(w=>{
-      if(w.punct) return `<span class="punct">${w.punct}</span>`;
-      return `<span class="wr ${w.t==='new'?'nw':''}" 
-        data-c="${w.c}" data-p="${w.p}" data-e="${w.e}" data-i="${w.i}"
-        onclick="selectWord(this)">
-        <span class="py">${w.p}</span>
-        <span class="hz">${w.c}</span>
-      </span>`;
-    }).join('');
-    return `<div class="text-para">${words}</div>`;
-  }).join('');
+  function drawCoating(ctx, w, h){
+    ctx.clearRect(0,0,w,h);
+    ctx.globalCompositeOperation = 'source-over';
+    const g = ctx.createLinearGradient(0,0,w,h);
+    g.addColorStop(0,'#d9dde3');
+    g.addColorStop(0.5,'#c3c8d1');
+    g.addColorStop(1,'#aab0bc');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,w,h);
 
-  renderVocab();
-  updateProgress();
-}
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 6;
+    for(let x = -h; x < w; x += 14){
+      ctx.beginPath();
+      ctx.moveTo(x,0);
+      ctx.lineTo(x+h,h);
+      ctx.stroke();
+    }
 
-function renderVocab() {
-  const seen = new Set(), list = [];
-  curArt.paragraphs.forEach(p=>p.forEach(w=>{
-    if(!w.punct && !seen.has(w.c)){seen.add(w.c);list.push(w);}
-  }));
-  const newCt = list.filter(w=>w.t==='new').length;
-  document.getElementById('new-count').textContent = newCt+' kata baru';
-  document.getElementById('vocab-list').innerHTML = list.map(w=>`
-    <div class="vi" onclick="hlWord('${w.c}')">
-      <div class="vdot ${w.t}"></div>
-      <div class="vc">${w.c}</div>
-      <div class="vp">${w.p}</div>
-      <div class="ve">${w.i}</div>
-    </div>
-  `).join('');
-}
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = `bold ${Math.floor(h*0.16)}px "Noto Sans TC", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('刮 / 拍 開我', w/2, h/2);
+  }
 
-// ===== WORD SELECT =====
-function selectWord(el) {
-  document.querySelectorAll('.wr').forEach(w=>w.classList.remove('hl'));
-  el.classList.add('hl');
-  selWord = el.dataset.c;
-  document.getElementById('dph').style.display='none';
-  document.getElementById('dbody').style.display='block';
-  document.getElementById('d-char').textContent = el.dataset.c;
-  document.getElementById('d-py').textContent = el.dataset.p;
-  document.getElementById('d-en').textContent = el.dataset.e;
-  document.getElementById('d-id').textContent = el.dataset.i;
-  document.getElementById('d-type').textContent = el.dataset.c.length>1?'kata majemuk':'karakter tunggal';
+  function buildCard(word, colorPair){
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.revealed = 'false';
 
-  const tones = {'ā':'1','á':'2','ǎ':'3','à':'4','ō':'1','ó':'2','ǒ':'3','ò':'4','ē':'1','é':'2','ě':'3','è':'4','ī':'1','í':'2','ǐ':'3','ì':'4','ū':'1','ú':'2','ǔ':'3','ù':'4'};
-  const py = el.dataset.p;
-  let toneNum = '0 (netral)';
-  for(const [k,v] of Object.entries(tones)){if(py.includes(k)){toneNum=v;break;}}
-  const toneNames = {'1':'1st ↑ (tinggi datar)','2':'2nd ↗ (naik)','3':'3rd ↘↗ (turun-naik)','4':'4th ↘ (turun tajam)','0 (netral)':'0 (netral)'};
-  document.getElementById('d-tone').textContent = toneNames[toneNum]||toneNum;
+    const content = document.createElement('div');
+    content.className = 'content';
+    content.style.background = colorPair[0];
+    content.style.color = colorPair[1];
+    content.innerHTML = `<div class="emoji">${word.emoji}</div><div class="hanzi">${word.hanzi}</div>`;
+    card.appendChild(content);
 
-  const saveBtn = document.getElementById('save-btn');
-  const sv = savedWords.has(el.dataset.c);
-  saveBtn.className = 'save-btn'+(sv?' sv':'');
-  saveBtn.innerHTML = sv?'<i class="ti ti-bookmark-filled"></i> Tersimpan di Flashcard':'<i class="ti ti-bookmark"></i> Simpan ke Flashcard';
+    const canvas = document.createElement('canvas');
+    canvas.width = 300;
+    canvas.height = 230;
+    canvas.tabIndex = 0;
+    canvas.setAttribute('role','button');
+    canvas.setAttribute('aria-label', '刮開生詞卡片');
+    card.appendChild(canvas);
 
-  // Stroke order
-  const chars = el.dataset.c.split('');
-  document.getElementById('stroke-grid').innerHTML = chars.map((ch,i)=>`
-    <div class="stroke-step" title="Karakter hingga guratan ke-${i+1}">
-      <span class="snum">${i+1}</span>${el.dataset.c.substring(0,i+1)}
-    </div>
-  `).join('')+'<p style="font-size:11px;color:var(--ink-muted);width:100%;margin-top:6px">Representasi progresif penulisan</p>';
+    const ctx = canvas.getContext('2d');
+    drawCoating(ctx, canvas.width, canvas.height);
 
-  // Examples
-  const exs = EXAMPLES_DB[el.dataset.c] || EXAMPLES_DB.default;
-  document.getElementById('example-list').innerHTML = exs.map(ex=>`
-    <div class="ex-item">
-      <div class="ex-cn">${ex.cn}</div>
-      <div class="ex-py">${ex.py}</div>
-      <div class="ex-id">${ex.id}</div>
-    </div>
-  `).join('');
-}
+    let drawing = false;
+    let lastPos = null;
+    let checkTimer = null;
 
-function hlWord(chars) {
-  const el = document.querySelector(`.wr[data-c="${chars}"]`);
-  if(el){el.scrollIntoView({behavior:'smooth',block:'center'});selectWord(el);}
-}
+    function pos(e){
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
 
-function showSide(sec,btn) {
-  document.querySelectorAll('.sw-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.side-sec').forEach(s=>s.classList.remove('active'));
-  document.getElementById('side-'+sec).classList.add('active');
-}
+    function scratchAt(p, radius){
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, Math.PI*2);
+      ctx.fill();
+    }
 
-// ===== PINYIN MODE =====
-function setPy(mode,btn) {
-  pyMode=mode;
-  document.getElementById('article-body').className='article-card '+mode+'-py';
-  document.querySelectorAll('#pin-g .mbtn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-}
+    function scratchLine(a, b, radius){
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = radius*2;
+      ctx.beginPath();
+      ctx.moveTo(a.x,a.y);
+      ctx.lineTo(b.x,b.y);
+      ctx.stroke();
+    }
 
-function setScript(mode,btn) {
-  document.querySelectorAll('#script-g .mbtn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-}
+    function checkProgress(){
+      const data = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+      let cleared = 0, total = 0;
+      for(let i = 3; i < data.length; i += 4*5){
+        total++;
+        if(data[i] < 60) cleared++;
+      }
+      if(total === 0) return;
+      const pct = cleared/total*100;
+      if(pct > 42){
+        reveal();
+      }
+    }
 
-// ===== SAVE WORD =====
-function toggleSave() {
-  if(!selWord) return;
-  if(savedWords.has(selWord)) savedWords.delete(selWord);
-  else { savedWords.add(selWord); fcDeck.push({c:selWord,p:document.getElementById('d-py').textContent,e:document.getElementById('d-id').textContent,ctx:'Dari artikel: '+curArt.title}); }
-  const sv = savedWords.has(selWord);
-  const btn = document.getElementById('save-btn');
-  btn.className='save-btn'+(sv?' sv':'');
-  btn.innerHTML=sv?'<i class="ti ti-bookmark-filled"></i> Tersimpan di Flashcard':'<i class="ti ti-bookmark"></i> Simpan ke Flashcard';
-  document.querySelectorAll(`.wr[data-c="${selWord}"]`).forEach(el=>el.classList.toggle('sv',sv));
-  updateProgress();
-}
+    function reveal(){
+      if(card.dataset.revealed === 'true') return;
+      card.dataset.revealed = 'true';
+      if(checkTimer){ clearInterval(checkTimer); activeIntervals.delete(checkTimer); checkTimer = null; }
+      canvas.classList.add('fading');
+      setTimeout(() => {
+        canvas.style.display = 'none';
+      }, 360);
+      card.classList.add('revealed');
+      revealedCount++;
+      countEl.textContent = revealedCount;
+      spawnSparkle(card);
+    }
 
-function updateProgress() {
-  const ct = savedWords.size;
-  const tot = curArt.paragraphs.flat().filter(w=>w.t==='new').length||7;
-  document.getElementById('saved-count').textContent=ct+' / '+tot;
-  document.getElementById('saved-bar').style.width=Math.min(ct/tot*100,100)+'%';
-}
+    function startCheckLoop(){
+      if(checkTimer) return;
+      checkTimer = setInterval(checkProgress, 180);
+      activeIntervals.add(checkTimer);
+    }
 
-// ===== AUDIO =====
-function speakText() {
-  const txt = curArt.paragraphs.flat().filter(w=>!w.punct).map(w=>w.c).join('');
-  speak(txt);
-}
-function speakWord() { if(selWord) speak(selWord); }
-function speak(txt) {
-  if(!('speechSynthesis' in window)) return alert('Browser Anda tidak mendukung text-to-speech');
-  speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(txt);
-  u.lang='zh-CN'; u.rate=0.75;
-  speechSynthesis.speak(u);
-}
+    function onDown(e){
+      if(card.dataset.revealed === 'true') return;
+      canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
+      drawing = true;
+      const p = pos(e);
+      lastPos = p;
+      scratchAt(p, 46);
+      startCheckLoop();
+      checkProgress();
+      e.preventDefault();
+    }
+    function onMove(e){
+      if(!drawing || card.dataset.revealed === 'true') return;
+      const p = pos(e);
+      scratchLine(lastPos, p, 20);
+      lastPos = p;
+      e.preventDefault();
+    }
+    function onUp(e){
+      drawing = false;
+      lastPos = null;
+      if(checkTimer){ clearInterval(checkTimer); activeIntervals.delete(checkTimer); checkTimer = null; }
+    }
 
-// ===== LIBRARY =====
-function renderLibrary() {
-  document.getElementById('lib-grid').innerHTML = ARTICLES_DB.map(a=>`
-    <div class="lcard" onclick="openArticle(${a.id})">
-      <div class="lcard-title">${a.title}</div>
-      <div class="lcard-desc">Level ${a.level} · ${a.wordCount} kata · Kategori: ${a.cat}</div>
-      <div class="lcard-foot">
-        <span class="lvl-badge ${a.lvlClass}">${a.level}</span>
-        <span class="chip ${a.chip==='Pemula'?'cg':a.chip==='Menengah'?'ca':a.chip==='Lanjutan'?'cr':'cg'}">${a.chip}</span>
-      </div>
-    </div>
-  `).join('')+`<div class="lcard-add" onclick="goView('analyze')">
-    <i class="ti ti-plus"></i>
-    <span>Unggah teks sendiri</span>
-  </div>`;
-}
+    canvas.addEventListener('pointerdown', onDown);
+    canvas.addEventListener('pointermove', onMove);
+    canvas.addEventListener('pointerup', onUp);
+    canvas.addEventListener('pointerleave', onUp);
+    canvas.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); reveal(); }
+    });
 
-function openArticle(id) {
-  curArt = ARTICLES_DB[id];
-  goView('reader');
-}
+    // 讓「顯示生詞」按鈕可以從外部呼叫這張卡的揭曉動作
+    card._reveal = reveal;
 
-function filterLib(lvl) {
-  // future enhancement
-  renderLibrary();
-}
+    return card;
+  }
 
-// ===== ANALYZE =====
-function analyzeText() {
-  const txt = document.getElementById('custom-input').value.trim();
-  if(!txt){alert('Masukkan teks Mandarin terlebih dahulu!');return;}
-  const rPanel = document.getElementById('analyze-result');
-  const rContent = document.getElementById('analyze-content');
-  rPanel.style.display='block';
-  rContent.innerHTML=`<div style="color:var(--jade);display:flex;align-items:center;gap:8px">
-    Menganalisis teks<span class="ldots"><span>.</span><span>.</span><span>.</span></span>
-  </div>`;
-  setTimeout(()=>{
-    const uniqueChars = new Set(txt.replace(/[^\u4e00-\u9fff]/g,'')).size;
-    const totalChars = (txt.match(/[\u4e00-\u9fff]/g)||[]).length;
-    rContent.innerHTML=`
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-        <span class="chip ca">Level: HSK 2-3 (estimasi)</span>
-        <span class="chip cg">${totalChars} karakter Mandarin</span>
-        <span class="chip cb">${uniqueChars} karakter unik</span>
-      </div>
-      <p style="margin-bottom:8px">Teks berhasil dianalisis. Ditemukan <strong>${uniqueChars}</strong> karakter unik dari total <strong>${totalChars}</strong> karakter Mandarin.</p>
-      <p style="color:var(--jade-dark);font-size:13px">Klik "Buka Reader" di atas untuk membaca dengan pinyin interaktif dan kamus lengkap.</p>
-    `;
-  }, 1600);
-}
+  function spawnSparkle(card){
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.textContent = '✨';
+    s.style.left = '50%';
+    s.style.top = '50%';
+    card.appendChild(s);
+    setTimeout(() => s.remove(), 650);
+  }
 
-function askAI(prompt) {
-  if(typeof sendPrompt==='function') sendPrompt(prompt);
-  else window.open('https://claude.ai','_blank');
-}
+  function renderGrid(){
+    grid.innerHTML = '';
+    const order = shuffle(WORDS);
+    order.forEach((word, i) => {
+      const colorPair = PALETTE[i % PALETTE.length];
+      grid.appendChild(buildCard(word, colorPair));
+    });
+  }
 
-function moreExamples() { askAI('Berikan 5 contoh kalimat Mandarin menggunakan kata "'+selWord+'" dengan terjemahan bahasa Indonesia'); }
+  function shuffleAnimationThenRender(){
+    resetBtn.disabled = true;
+    revealBtn.disabled = true;
+    clearAllIntervals();
+    overlay.classList.add('show');
 
-// ===== FLASHCARD =====
-function fcFlip() {
-  fcFlipped=!fcFlipped;
-  document.getElementById('fc-inner').classList.toggle('flipped',fcFlipped);
-  document.getElementById('fc-acts').style.display=fcFlipped?'flex':'none';
-}
-function fcNext(res) {
-  if(res==='easy') { fcEasy++; document.getElementById('fc-easy').textContent=fcEasy; }
-  if(res==='hard') { fcHard++; document.getElementById('fc-hard').textContent=fcHard; }
-  fcIdx=(fcIdx+1)%fcDeck.length;
-  fcFlipped=false;
-  document.getElementById('fc-inner').classList.remove('flipped');
-  document.getElementById('fc-acts').style.display='none';
-  const c=fcDeck[fcIdx];
-  document.getElementById('fc-char').textContent=c.c;
-  document.getElementById('fc-py').textContent=c.p;
-  document.getElementById('fc-en').textContent=c.e;
-  document.getElementById('fc-ctx').textContent=c.ctx||'';
-  document.getElementById('fc-cur').textContent=fcIdx+1;
-  document.getElementById('fc-tot').textContent=fcDeck.length;
-}
+    const cards = Array.from(grid.children);
+    cards.forEach(c => {
+      c.classList.add('shuffling');
+      c.style.transform = `translate(${(Math.random()*14-7).toFixed(1)}px, ${(Math.random()*14-7).toFixed(1)}px) rotate(${(Math.random()*8-4).toFixed(1)}deg) scale(.94)`;
+    });
 
-// ===== AI ACTIONS =====
-function makeQuiz() {
-  if(typeof sendPrompt==='function') sendPrompt('Buatkan 10 soal pilihan ganda dari kosakata artikel "'+curArt.title+'" dalam bahasa Mandarin, dengan pilihan jawaban dan kunci jawaban');
-}
-function makeTranslation() {
-  if(typeof sendPrompt==='function') sendPrompt('Terjemahkan artikel Mandarin "'+curArt.title+'" ke bahasa Indonesia dengan terjemahan per kalimat');
-}
+    setTimeout(() => {
+      revealedCount = 0;
+      countEl.textContent = '0';
+      renderGrid();
+      overlay.classList.remove('show');
+      resetBtn.disabled = false;
+      revealBtn.disabled = false;
+    }, 700);
+  }
 
-// ===== INIT =====
-renderArticle();
-renderLibrary();
+  function revealAllNow(){
+    Array.from(grid.children).forEach(card => {
+      if(card._reveal) card._reveal();
+    });
+  }
+
+  resetBtn.addEventListener('click', shuffleAnimationThenRender);
+  revealBtn.addEventListener('click', revealAllNow);
+
+  // initial load: shuffle once before play, per teacher's request
+  renderGrid();
+  overlay.classList.add('show');
+  setTimeout(() => {
+    overlay.classList.remove('show');
+  }, 900);
+})();
 </script>
 </body>
 </html>
